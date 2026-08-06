@@ -1,0 +1,11 @@
+.DS_Store
+.build/
+DerivedData/
+
+# Состояние окна Xcode — у каждого разработчика своё.
+.swiftpm/
+*.xcuserdatad
+xcuserdata/
+
+# У пакета-библиотеки резолв не фиксируют: версии выбирает потребитель.
+Package.resolved
