@@ -1,0 +1,135 @@
+name: Интеграция — сборка воркспейса
+
+# Собирает весь воркспейс с ЭТОЙ веткой на месте папки своей команды.
+#
+# Проверяется не «компилируется ли пакет», а «переживут ли соседи мою правку».
+# Разница существенная: пакет прекрасно собирается сам по себе и при этом
+# ломает три чужих таргета, которые его импортируют.
+#
+# main обязан оставаться релизопригодным. Ломающие изменения проводятся
+# фазами (раздел 2.3 документа архитектуры): сначала аддитивная правка
+# с фолбэком у потребителей, потом переключение, потом удаление старого.
+# Каждая фаза мержится отдельно и оставляет эту сборку зелёной. Если она
+# красная — нарушен именно этот порядок.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WORKSPACE_REPO: yklishevich/kufar-ios-demo
+
+jobs:
+  deplint:
+    name: Граф зависимостей
+    # ubuntu намеренно: линтер читает манифесты и не требует ни Xcode, ни сети.
+    # Нарушение границы видно через минуту, а не после сборки на macOS,
+    # которая тарифицируется с десятикратным множителем.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Клонировать воркспейс
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh repo clone "$WORKSPACE_REPO" workspace
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Поднять репозитории команд
+        working-directory: workspace
+        env:
+          KUFAR_ORG: https://github.com/yklishevich
+        run: ./Tools/bootstrap.sh
+
+      - name: Подставить проверяемую ревизию
+        working-directory: workspace/posting_team
+        # Папка уже склонирована bootstrap'ом — переключаем её на нужный
+        # коммит, а не клонируем поверх. Фетч по SHA работает и для PR
+        # из форка: GitHub держит их головы в refs/pull/*.
+        run: |
+          git fetch --quiet origin ${{ github.event.pull_request.head.sha || github.sha }}
+          git checkout --quiet FETCH_HEAD
+          git --no-pager log -1 --oneline
+
+      - name: Проверить направление зависимостей
+        working-directory: workspace
+        run: python3 Tools/deplint.py
+
+  build:
+    name: Сборка и тесты
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - name: Клонировать воркспейс
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh repo clone "$WORKSPACE_REPO" workspace
+
+      - name: Поднять репозитории команд
+        working-directory: workspace
+        env:
+          KUFAR_ORG: https://github.com/yklishevich
+        run: ./Tools/bootstrap.sh
+
+      - name: Подставить проверяемую ревизию
+        working-directory: workspace/posting_team
+        run: |
+          git fetch --quiet origin ${{ github.event.pull_request.head.sha || github.sha }}
+          git checkout --quiet FETCH_HEAD
+          git --no-pager log -1 --oneline
+
+      - name: Показать, что подменено локально
+        working-directory: workspace
+        # Диагностика: в этом режиме ни одна зависимость не должна ехать
+        # из сети. Строчка "Fetching https://…" в логе означает, что имя папки
+        # разъехалось с идентичностью пакета — тогда Xcode не подменяет,
+        # и проверяется опубликованная версия вместо ветки из PR.
+        run: ./Tools/bootstrap.sh --status
+
+      - name: Тесты
+        working-directory: workspace
+        run: |
+          xcodebuild test \
+            -workspace KufarWorkspace.xcworkspace \
+            -scheme KufarDemo \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-posting_team
+          path: workspace/TestResults.xcresult
+
+  notify:
+    name: Сообщить мета-репозиторию
+    # Только после мержа и только если сборка прошла. Мета-репозиторий
+    # соберёт main всех команд разом — там ловятся конфликты между двумя
+    # PR, каждый из которых по отдельности был зелёным.
+    needs: [deplint, build]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: repository_dispatch
+        env:
+          # Штатный GITHUB_TOKEN действует только в своём репозитории.
+          # Для события в чужой нужен PAT с правом repo.
+          GH_TOKEN: ${{ secrets.WORKSPACE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Нет секрета WORKSPACE_DISPATCH_TOKEN — воркспейс не пересоберётся"
+            exit 0
+          fi
+          gh api "repos/$WORKSPACE_REPO/dispatches" \
+            -f event_type=team-repo-merged \
+            -F "client_payload[repo]=${{ github.repository }}" \
+            -F "client_payload[sha]=${{ github.sha }}"
