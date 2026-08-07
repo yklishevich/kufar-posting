@@ -42,7 +42,7 @@ let package = Package(
             dependencies: [
                 "PostingDomain",
                 .product(name: "SharedKernel", package: "kufar.Foundation"),
-                .product(name: "Networking", package: "kufar.Foundation"),
+                .product(name: "NetworkingInterface", package: "kufar.Foundation"),
                 .product(name: "PostingInterface", package: "kufar.PostingContracts"),
                 .product(name: "CatalogContracts", package: "kufar.CatalogContracts")
             ]
@@ -67,7 +67,7 @@ let package = Package(
             name: "Posting",
             dependencies: [
                 "PostingUI", "PostingData", "PostingDomain",
-                .product(name: "Networking", package: "kufar.Foundation"),
+                .product(name: "NetworkingInterface", package: "kufar.Foundation"),
                 .product(name: "AnalyticsAPI", package: "kufar.Analytics"),
                 // CatalogCategory и PostingDraft — в сигнатуре слота подачи.
                 .product(name: "PostingInterface", package: "kufar.PostingContracts"),

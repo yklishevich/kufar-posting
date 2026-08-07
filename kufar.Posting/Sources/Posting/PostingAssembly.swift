@@ -5,12 +5,12 @@ import PostingUI
 import PostingInterface
 import CatalogContracts
 import AnalyticsAPI
-import Networking
+import NetworkingInterface
 
 /// Единственный продукт пакета.
 public enum PostingAssembly {
 
-    public static func makeRepository(client: APIClient) -> any PostingRepository {
+    public static func makeRepository(client: any HTTPPerforming) -> any PostingRepository {
         RemotePostingRepository(client: client)
     }
 
