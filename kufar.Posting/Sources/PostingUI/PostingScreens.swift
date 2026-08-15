@@ -39,9 +39,9 @@ final class PostingModel {
 
     func start() async {
         categories = (try? await repo.categories()) ?? []
-        // Черновик переживает выгрузку приложения: подача — самое
-        // конверсионное место продукта, и потерянный черновик это
-        // потерянное объявление.
+        // The draft survives the app being unloaded: posting is the most
+        // conversion-sensitive place in the product, and a lost draft is a lost
+        // listing.
         if let saved = await drafts.load() {
             draft = saved
             await reloadSchema()
@@ -49,8 +49,8 @@ final class PostingModel {
         analytics.track(AnalyticsEvent(name: "posting_started"))
     }
 
-    /// Выбор категории — единственное решение пользователя, которое
-    /// определяет вертикаль. Дальше всё приходит схемой.
+    /// Choosing a category is the user's only decision that determines the
+    /// vertical. Everything after that arrives via the schema.
     func select(_ category: CatalogCategory) async {
         draft.categoryID = category.id
         draft.values = [:]
@@ -86,14 +86,14 @@ final class PostingModel {
         } catch PostingError.rejected(let reason) {
             failure = reason
         } catch {
-            failure = "Заполните обязательные поля"
+            failure = "Fill in the required fields"
         }
         return nil
     }
 }
 
-/// Шаг первый: категория. Она же — единственное место, где пользователь
-/// выбирает вертикаль, хотя слова «вертикаль» не видит.
+/// Step one: the category. It is also the only place where the user picks a
+/// vertical, though they never see the word "vertical".
 package struct PostingCategoryScreen: View {
     @Environment(Router.self) private var router
     @State private var model: PostingModel
@@ -108,12 +108,12 @@ package struct PostingCategoryScreen: View {
         List {
             if model.draft.categoryID != nil {
                 Section {
-                    Button("Продолжить черновик") {
+                    Button("Continue draft") {
                         router.push(PostingRoute.form(model.draft.categoryID ?? ""))
                     }
                 }
             }
-            Section("Куда подаём") {
+            Section("Where to post") {
                 ForEach(model.categories) { root in
                     DisclosureGroup(root.title) {
                         ForEach(root.children) { child in
@@ -129,19 +129,20 @@ package struct PostingCategoryScreen: View {
                 }
             }
         }
-        .navigationTitle("Подать объявление")
+        .navigationTitle("Post a listing")
         .task { await model.start() }
     }
 }
 
-/// Шаг второй: форма. Состав полей целиком с бэкенда — «объём двигателя»
-/// и «состояние» не захардкожены в клиенте, поэтому новая категория
-/// выкатывается без релиза.
+/// Step two: the form. The set of fields comes entirely from the backend —
+/// "engine displacement" and "condition" are not hardcoded into the client, so a
+/// new category ships with no release.
 ///
-/// Слот `step` — вклад вертикали в чужой флоу. Подача о вертикалях не знает:
-/// тип шага приходит параметром, а какой именно шаг подставить, решает
-/// composition root. Схема покрывает «какие вопросы задать»; слот нужен там,
-/// где требуется код — камера, карта, разбор VIN.
+/// The `step` slot is the vertical's contribution to another team's flow. Posting
+/// knows nothing about verticals: the step's type arrives as a parameter, and
+/// which step to supply is the composition root's decision. The schema covers
+/// "which questions to ask"; the slot is needed where code is required — the
+/// camera, a map, VIN parsing.
 struct PostingFormScreen<Step: View>: View {
     @Environment(Router.self) private var router
     @State private var model: PostingModel
@@ -161,26 +162,27 @@ struct PostingFormScreen<Step: View>: View {
 
     var body: some View {
         Form {
-            Section("Основное") {
-                TextField("Заголовок", text: titleBinding)
-                TextField("Цена, р.", text: priceBinding)
-                Button("Добавить фото (\(model.draft.photoCount))") { model.addPhoto() }
+            Section("Basics") {
+                TextField("Title", text: titleBinding)
+                TextField("Price, r.", text: priceBinding)
+                Button("Add photo (\(model.draft.photoCount))") { model.addPhoto() }
             }
 
-            Section("Параметры") {
-                // Тот же SchemaForm, что на экране фильтров. Одна схема
-                // описывает и «по чему ищем», и «что спрашиваем при подаче».
+            Section("Parameters") {
+                // The same SchemaForm as on the filters screen. One schema
+                // describes both "what we search by" and "what we ask when posting".
                 SchemaForm(fields: model.fields, values: valuesBinding)
             }
 
-            // Слот вертикали. Категория приезжает вместе с деревом, то есть
-            // асинхронно, — поэтому замыкание вызывается здесь, в body, а не
-            // при построении destination: там известен только её id.
+            // The vertical's slot. The category arrives together with the tree,
+            // i.e. asynchronously — which is why the closure is called here, in
+            // body, rather than when the destination is built: only its id is
+            // known there.
             //
-            // Смена категории меняет тип внутри _ConditionalContent, SwiftUI
-            // сносит поддерево и сбрасывает @State шага. В карточке это было бы
-            // багом (5.2), здесь — требуемое поведение: отсканированный VIN
-            // не должен пережить переключение на «Квартиры».
+            // Changing the category changes the type inside _ConditionalContent,
+            // SwiftUI tears down the subtree and resets the step's @State. On the
+            // detail screen that would be a bug (5.2); here it is the required
+            // behaviour: a scanned VIN must not survive a switch to "Apartments".
             if let category = model.category {
                 Section { step(category, draftBinding) }
             }
@@ -189,7 +191,7 @@ struct PostingFormScreen<Step: View>: View {
                 Text(failure).foregroundStyle(.red)
             }
         }
-        .navigationTitle(model.category?.title ?? "Объявление")
+        .navigationTitle(model.category?.title ?? "Listing")
         .task {
             await model.start()
             if model.draft.categoryID != categoryID {
@@ -199,7 +201,7 @@ struct PostingFormScreen<Step: View>: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            PrimaryButton(model.isPublishing ? "Публикуем…" : "Опубликовать",
+            PrimaryButton(model.isPublishing ? "Publishing…" : "Publish",
                           systemImage: "paperplane") {
                 Task { await publish() }
             }
@@ -210,11 +212,11 @@ struct PostingFormScreen<Step: View>: View {
         }
     }
 
-    /// Вторая точка схождения графа после поиска.
+    /// The graph's second convergence point after search.
     ///
-    /// Вертикаль опубликованного объявления приходит с бэкенда данными,
-    /// в маршрут превращается здесь. Ни одного импорта чужой реализации —
-    /// только контракты. Добавится вертикаль — компилятор придёт сюда.
+    /// The published listing's vertical arrives from the backend as data and is
+    /// turned into a route here. Not one import of another team's implementation
+    /// — contracts only. Add a vertical and the compiler will come here.
     private func publish() async {
         guard let published = await model.publish() else { return }
         switch published.vertical {
@@ -240,17 +242,17 @@ struct PostingFormScreen<Step: View>: View {
         Binding(get: { model.draft.values }, set: { model.draft.values = $0 })
     }
 
-    /// Шаг пишет прямо в черновик: `didSet` у `draft` персистит его сам,
-    /// поэтому распознанный VIN переживает выгрузку приложения так же,
-    /// как и всё остальное, что ввёл пользователь.
+    /// The step writes straight into the draft: `draft`'s `didSet` persists it by
+    /// itself, so a recognised VIN survives the app being unloaded just like
+    /// everything else the user entered.
     private var draftBinding: Binding<PostingDraft> {
         Binding(get: { model.draft }, set: { model.draft = $0 })
     }
 }
 
 extension PostingFormScreen where Step == EmptyView {
-    /// Форма без вклада вертикали: превью, тесты и демо-приложение подачи,
-    /// собранное без вертикалей вообще.
+    /// The form with no contribution from a vertical: previews, tests, and a
+    /// posting demo app built with no verticals at all.
     init(categoryID: CatalogCategory.ID,
          repo: any PostingRepository,
          drafts: any DraftStore,

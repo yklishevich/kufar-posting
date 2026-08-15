@@ -1,14 +1,15 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
-// Вторая точка схождения графа после поиска.
+// The graph's second convergence point after search.
 //
-// Поиск читает поперёк вертикалей, подача пишет в одну — но обе знают
-// про все вертикали сразу и обе знают только их контракты. Механизмы тоже
-// общие: дерево категорий и рендерер схем, только форма редактируемая.
+// Search reads across verticals, posting writes into one — but both know about
+// every vertical at once and both know only their contracts. The mechanisms are
+// shared too: the category tree and the schema renderer, only the form is
+// editable.
 //
-// Наружу торчит один продукт Posting. PostingUI, PostingData и PostingDomain
-// остаются внутренними таргетами.
+// Exactly one product, Posting, sticks out. PostingUI, PostingData and
+// PostingDomain stay internal targets.
 
 let package = Package(
     name: "KufarPosting",
@@ -69,7 +70,7 @@ let package = Package(
                 "PostingUI", "PostingData", "PostingDomain",
                 .product(name: "NetworkingInterface", package: "kufar.Foundation"),
                 .product(name: "AnalyticsAPI", package: "kufar.Analytics"),
-                // CatalogCategory и PostingDraft — в сигнатуре слота подачи.
+                // CatalogCategory and PostingDraft appear in the posting slot's signature.
                 .product(name: "PostingInterface", package: "kufar.PostingContracts"),
                 .product(name: "CatalogContracts", package: "kufar.CatalogContracts")
             ]

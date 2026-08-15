@@ -2,13 +2,13 @@ import Foundation
 import SharedKernel
 import CatalogContracts
 
-/// Контракт подачи. Data-only, Foundation.
+/// The posting contract. Data-only, Foundation.
 public enum PostingRoute: Hashable, Codable, Sendable, CaseIterable {
-    /// Шаг выбора категории — вход в воронку.
+    /// The category-picking step — the entry into the funnel.
     case category
-    /// Форма для выбранной категории. Состав полей задаёт бэкенд.
+    /// The form for the chosen category. The backend defines the set of fields.
     case form(CatalogCategory.ID)
-    /// Черновик, восстановленный после закрытия приложения.
+    /// A draft restored after the app was closed.
     case draft(PostingDraft.ID)
 
     public static var allCases: [PostingRoute] {
@@ -16,11 +16,11 @@ public enum PostingRoute: Hashable, Codable, Sendable, CaseIterable {
     }
 }
 
-/// Черновик объявления.
+/// A listing draft.
 ///
-/// Codable, потому что переживает выгрузку приложения из памяти: подача —
-/// самое конверсионное место продукта, и потерянный на третьем шаге черновик
-/// это потерянное объявление, то есть потерянная ликвидность.
+/// Codable, because it survives the app being evicted from memory: posting is the
+/// most conversion-sensitive place in the product, and a draft lost on step three
+/// is a listing that never got created — that is, lost liquidity.
 public struct PostingDraft: Identifiable, Hashable, Codable, Sendable {
     public struct ID: Hashable, Codable, Sendable, RawRepresentable {
         public let rawValue: String
@@ -32,7 +32,7 @@ public struct PostingDraft: Identifiable, Hashable, Codable, Sendable {
     public var categoryID: CatalogCategory.ID?
     public var title: String
     public var price: Decimal?
-    /// id поля схемы → значение. Ровно та же форма, что у состояния фильтра.
+    /// schema field id → value. Exactly the same shape as the filter state.
     public var values: [String: AttributeValue]
     public var photoCount: Int
     public var updatedAt: Date

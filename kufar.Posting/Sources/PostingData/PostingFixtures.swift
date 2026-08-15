@@ -4,44 +4,44 @@ import SharedKernel
 
 extension RemotePostingRepository {
 
-    /// То же дерево, что отдаёт поиск. В настоящем проекте — один эндпоинт
-    /// каталога на обе поверхности, здесь фикстуры дублируются намеренно:
-    /// пакеты подачи и поиска не должны зависеть друг от друга.
+    /// The same tree search serves. In a real project this would be one catalogue
+    /// endpoint for both surfaces; here the fixtures are duplicated deliberately:
+    /// the posting and search packages must not depend on each other.
     static let tree: [CatalogCategory] = [
-        CatalogCategory(id: "goods", title: "Товары", vertical: .goods, children: [
-            CatalogCategory(id: "goods.electronics", title: "Электроника", vertical: .goods),
-            CatalogCategory(id: "goods.furniture", title: "Мебель и интерьер", vertical: .goods)
+        CatalogCategory(id: "goods", title: "Goods", vertical: .goods, children: [
+            CatalogCategory(id: "goods.electronics", title: "Electronics", vertical: .goods),
+            CatalogCategory(id: "goods.furniture", title: "Furniture & interior", vertical: .goods)
         ]),
-        CatalogCategory(id: "auto", title: "Транспорт", vertical: .auto, children: [
-            CatalogCategory(id: "auto.cars", title: "Легковые автомобили", vertical: .auto),
-            CatalogCategory(id: "auto.parts", title: "Запчасти", vertical: .auto)
+        CatalogCategory(id: "auto", title: "Vehicles", vertical: .auto, children: [
+            CatalogCategory(id: "auto.cars", title: "Cars", vertical: .auto),
+            CatalogCategory(id: "auto.parts", title: "Parts", vertical: .auto)
         ])
     ]
 
-    /// Схема формы. Поля те же, что в фильтре той же категории, — и это
-    /// не совпадение: одна схема на бэкенде описывает и «по чему ищем»,
-    /// и «что показываем», и «что спрашиваем при подаче».
+    /// The form schema. The fields are the same as in the filter for that
+    /// category — and that is no coincidence: one schema on the backend describes
+    /// "what we search by", "what we show" and "what we ask when posting" alike.
     static func schema(for categoryID: CatalogCategory.ID) -> Data {
         switch categoryID {
         case "auto", "auto.cars":
             Data("""
             [
-              { "id": "brand",   "title": "Марка",       "type": "reference",
+              { "id": "brand",   "title": "Make",        "type": "reference",
                 "options": ["Volkswagen", "Skoda", "Renault", "Mazda"] },
-              { "id": "year",    "title": "Год выпуска", "type": "number" },
-              { "id": "mileage", "title": "Пробег",      "type": "number", "unit": "км" },
+              { "id": "year",    "title": "Model year",  "type": "number" },
+              { "id": "mileage", "title": "Mileage",     "type": "number", "unit": "km" },
               { "id": "vin",     "title": "VIN",         "type": "text" },
-              { "id": "customs", "title": "Растаможен",  "type": "toggle" },
-              { "id": "eco",     "title": "Эко-класс",   "type": "gauge" }
+              { "id": "customs", "title": "Cleared",     "type": "toggle" },
+              { "id": "eco",     "title": "Eco class",   "type": "gauge" }
             ]
             """.utf8)
         default:
             Data("""
             [
-              { "id": "state",    "title": "Состояние", "type": "reference",
-                "options": ["Новое", "Б/у"] },
-              { "id": "delivery", "title": "Доставка",  "type": "toggle" },
-              { "id": "brand",    "title": "Бренд",     "type": "text" }
+              { "id": "state",    "title": "Condition", "type": "reference",
+                "options": ["New", "Used"] },
+              { "id": "delivery", "title": "Delivery",  "type": "toggle" },
+              { "id": "brand",    "title": "Brand",     "type": "text" }
             ]
             """.utf8)
         }

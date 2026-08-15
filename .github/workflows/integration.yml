@@ -1,17 +1,16 @@
-name: Интеграция
+name: Integration
 
-# Вызывает общую проверку из мета-репозитория: она собирает весь воркспейс
-# с ревизией этого PR на месте папки posting_team. Тело — там, в одном экземпляре
-# на все шесть команд.
+# Calls the shared check from the meta repository: it builds the whole workspace
+# with this PR's revision in place of the posting_team folder. The body lives there, in
+# a single copy shared by all six teams.
 #
-# Подключение по тегу, а не по @main: правка в общем workflow иначе ломала бы
-# CI шести команд разом и без предупреждения. Тот же довод, по которому пакеты
-# подключаются через from:, а не веткой.
+# Referenced by tag rather than by @main: otherwise an edit to the shared
+# workflow would break six teams' CI at once and without warning. The same
+# argument by which packages are referenced with from: rather than by branch.
 #
-# secrets: inherit передаёт WORKSPACE_DISPATCH_TOKEN — им job notify сообщает
-# мета-репозиторию о мерже. Без секрета всё работает, кроме пересборки
-# воркспейса после мержа.
-
+# secrets: inherit passes WORKSPACE_DISPATCH_TOKEN — the notify job uses it to
+# tell the meta repository about a merge. Without the secret everything works
+# except rebuilding the workspace after a merge.
 on:
   pull_request:
   push:

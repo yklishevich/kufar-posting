@@ -1,8 +1,8 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
-// Контракты подачи. Их берут корень приложения (диплинк kufar://post)
-// и профиль (кнопка «Подать объявление»).
+// The posting contracts. They are used by the app root (the kufar://post deep
+// link) and by the profile (the "Post a listing" button).
 
 let package = Package(
     name: "KufarPostingContracts",

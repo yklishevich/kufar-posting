@@ -32,8 +32,8 @@ package struct PostingDestinations<Step: View>: ViewModifier {
                                   analytics: analytics,
                                   step: step)
             case .draft:
-                // Восстановленный черновик открывается тем же экраном
-                // категории — он сам предложит продолжить.
+                // A restored draft opens with the same category screen — it will
+                // offer to continue by itself.
                 PostingCategoryScreen(repo: repo, drafts: drafts, analytics: analytics)
             }
         }

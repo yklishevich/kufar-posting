@@ -3,8 +3,8 @@ import SharedKernel
 import PostingInterface
 import CatalogContracts
 
-/// Результат публикации: ссылка на созданное объявление.
-/// Вертикаль приезжает данными — её определил бэкенд по категории.
+/// The result of publishing: a link to the listing that was created.
+/// The vertical arrives as data — the backend determined it from the category.
 public struct PublishedListing: Hashable, Sendable {
     public let id: ListingID
     public let vertical: Vertical
@@ -22,15 +22,15 @@ package enum PostingError: Error, Sendable {
 
 public protocol PostingRepository: Sendable {
     func categories() async throws -> [CatalogCategory]
-    /// Схема формы для категории — тот же механизм, что у фильтров,
-    /// только поля редактируемые и обязательные помечены.
+    /// The form schema for a category — the same mechanism as the filters, only
+    /// the fields are editable and the required ones are marked.
     func formSchema(categoryID: CatalogCategory.ID) async throws -> Data
     func publish(_ draft: PostingDraft) async throws -> PublishedListing
 }
 
-/// Хранилище черновика. Отдельный протокол, потому что у него другая
-/// природа: репозиторий ходит в сеть, черновик живёт на диске и должен
-/// переживать краш.
+/// Draft storage. A separate protocol, because its nature is different: the
+/// repository goes to the network, while the draft lives on disk and has to
+/// survive a crash.
 public protocol DraftStore: Sendable {
     func load() async -> PostingDraft?
     func save(_ draft: PostingDraft) async

@@ -1,15 +1,15 @@
-# kufar-posting — репозиторий команды подачи.
+# kufar-posting — the posting team's repository.
 #
-# Файл лежит в .github/ намеренно: GitHub читает CODEOWNERS только из корня
-# репозитория, из .github/ или из docs/. Пути ВНУТРИ файла работают,
-# вложенные файлы — нет. Место проверяет Tools/deplint.py, правило 11.
+# The file sits in .github/ deliberately. GitHub reads CODEOWNERS only from the
+# repository root, from .github/ or from docs/ — nested files like
+# kufar.Foundation/CODEOWNERS are ignored silently. That is a legacy of the
+# "repository = package" era, when every such file sat at its own root and
+# worked. The location is checked by Tools/deplint.py, rule 11.
 #
-# Побеждает ПОСЛЕДНЕЕ совпавшее правило, поэтому контрактный пакет ниже.
-#
-# Несколько владельцев — это ИЛИ, а не И: апрува достаточно от любого
-# одного, AND в CODEOWNERS не выражается. Платформа стоит вторым
-# владельцем у контракта потому, что его подключают чужие репозитории
-# и ломающее изменение здесь останавливает чужие сборки.
+# Ownership inside the repository is split by PATHS: the contract package lists
+# the platform team as a second owner, because a breaking change in a contract
+# stops other teams. The last matching rule wins, and several owners mean OR —
+# an approval from any one of them is enough.
 
 *                          @kufar/ios-posting
 /kufar.PostingContracts/   @kufar/ios-posting @kufar/ios-platform

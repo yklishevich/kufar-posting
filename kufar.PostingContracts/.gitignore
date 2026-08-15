@@ -2,10 +2,10 @@
 .build/
 DerivedData/
 
-# Состояние окна Xcode — у каждого разработчика своё.
+# Xcode window state — each developer has their own.
 .swiftpm/
 *.xcuserdatad
 xcuserdata/
 
-# У пакета-библиотеки резолв не фиксируют: версии выбирает потребитель.
+# A library package does not pin its resolution: the consumer picks the versions.
 Package.resolved

@@ -7,7 +7,7 @@ import CatalogContracts
 import AnalyticsAPI
 import NetworkingInterface
 
-/// Единственный продукт пакета.
+/// The package's only product.
 public enum PostingAssembly {
 
     public static func makeRepository(client: any HTTPPerforming) -> any PostingRepository {
@@ -18,9 +18,9 @@ public enum PostingAssembly {
         FileDraftStore()
     }
 
-    /// `Step` наружу не течёт: его прячет `some ViewModifier`. Композиционный
-    /// корень передаёт замыкание и никогда не называет получившийся тип —
-    /// `PostingDestinations<_ConditionalContent<…>>` не написан нигде.
+    /// `Step` does not leak outwards: `some ViewModifier` hides it. The
+    /// composition root passes a closure and never names the resulting type —
+    /// `PostingDestinations<_ConditionalContent<…>>` is written nowhere.
     public static func makeDestinations<Step: View>(
         repo: any PostingRepository,
         drafts: any DraftStore,

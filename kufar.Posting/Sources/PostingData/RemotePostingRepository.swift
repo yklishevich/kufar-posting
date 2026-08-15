@@ -27,11 +27,12 @@ package struct RemotePostingRepository: PostingRepository {
         _ = try? await client.get("posting/publish")
         try? await Task.sleep(for: .milliseconds(600))
 
-        // Вертикаль определяет бэкенд по категории — клиент её не выводит.
+        // The backend determines the vertical from the category — the client does not derive it.
         let vertical = Self.tree.find(draft.categoryID)?.vertical ?? .goods
-        // switch, а не тернарник: новая вертикаль должна остановить сборку,
-        // а не тихо получить чужой префикс. В демо это всего лишь id фикстуры,
-        // но форма ошибки та же, что у бейджа в ленте.
+        // A switch rather than a ternary: a new vertical has to stop the build
+        // rather than silently pick up somebody else's prefix. In the demo this is
+        // only a fixture id, but the shape of the mistake is the same as with the
+        // badge in the feed.
         let prefix = switch vertical {
         case .goods: "g"
         case .auto: "a"
@@ -40,8 +41,8 @@ package struct RemotePostingRepository: PostingRepository {
     }
 }
 
-/// Черновик на диске. В настоящем проекте — файл в Application Support
-/// плюс инкрементальная выгрузка фотографий с докачкой.
+/// The draft on disk. In a real project this would be a file in Application
+/// Support plus incremental photo upload with resume.
 package actor FileDraftStore: DraftStore {
     private var stored: PostingDraft?
 
